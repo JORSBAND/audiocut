@@ -10,8 +10,8 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Підключення Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide-react@latest"></script>
+    <!-- FIX: Підключаємо Lucide Core UMD, який надає глобальний об'єкт `lucide` -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
     <style>
         /* Шрифт Inter для естетики */
@@ -26,7 +26,74 @@
 
 <script type="text/babel">
     const { useState, useRef, useEffect, useCallback, useMemo } = React;
-    const { Play, Pause, X, FileUp, Loader, SlidersHorizontal, Download, Volume2, Waves, Repeat, Aperture, Minus, Split, Zap, Speaker, Music } = lucide;
+    
+    // FIX: Helper to create React component from Lucide icon object (when using core lucide CDN)
+    const createLucideReactComponent = (iconName) => {
+        // Використовуємо глобальний об'єкт 'lucide' з підключеного UMD-файлу
+        const IconData = lucide.icons[iconName];
+        if (!IconData) return () => <span style={{color: 'red'}}>Icon ({iconName}) not found</span>;
+        
+        // This helper renders the SVG path data into a React component
+        const LucideComponent = ({ size = 24, color = "currentColor", strokeWidth = 2, className = '', ...props }) => {
+            // IconData[0] містить тег, IconData[1] містить атрибути
+            const finalClassName = className ? `${IconData.name} ${className}` : IconData.name;
+
+            return (
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={size}
+                    height={size}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={finalClassName} 
+                    {...props}
+                >
+                    {IconData.map((data, index) => {
+                        // data[0] is tag name, data[1] is attributes
+                        const [tag, attrs] = data;
+                        // Підтримуємо основні SVG-теги, які використовує Lucide
+                        if (tag === 'path') {
+                            return <path key={index} {...attrs} />;
+                        } else if (tag === 'circle') {
+                            return <circle key={index} {...attrs} />;
+                        } else if (tag === 'line') {
+                            return <line key={index} {...attrs} />;
+                        } else if (tag === 'rect') {
+                            return <rect key={index} {...attrs} />;
+                        } else if (tag === 'polyline') {
+                            return <polyline key={index} {...attrs} />;
+                        }
+                        return null;
+                    })}
+                </svg>
+            );
+        };
+        LucideComponent.displayName = iconName;
+        return LucideComponent;
+    };
+    
+    // Створюємо необхідні React-компоненти на основі глобального 'lucide'
+    const Play = createLucideReactComponent('play');
+    const Pause = createLucideReactComponent('pause');
+    const X = createLucideReactComponent('x');
+    const FileUp = createLucideReactComponent('file-up');
+    const Loader = createLucideReactComponent('loader-circle'); // Використовуємо 'loader-circle' для анімації
+    const SlidersHorizontal = createLucideReactComponent('sliders-horizontal');
+    const Download = createLucideReactComponent('download');
+    const Volume2 = createLucideReactComponent('volume-2');
+    const Waves = createLucideReactComponent('waves');
+    const Repeat = createLucideReactComponent('repeat');
+    const Aperture = createLucideReactComponent('aperture');
+    const Minus = createLucideReactComponent('minus');
+    const Split = createLucideReactComponent('split');
+    const Zap = createLucideReactComponent('zap');
+    const Speaker = createLucideReactComponent('speaker');
+    const Music = createLucideReactComponent('music');
+
 
     // --- Утиліти Web Audio API ---
 
@@ -171,6 +238,12 @@
 
         const [masterGain, setMasterGain] = useState(1);
         
+        // Рефи для Web Audio API та Canvas
+        const sourceRef = useRef(null);
+        const canvasRef = useRef(null);
+        const nodesRef = useRef({});
+
+
         // --- Playhead Animation Loop ---
         const animatePlayhead = useCallback(() => {
             if (!audioContext || !audioBuffer) return;
