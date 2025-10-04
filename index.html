@@ -87,7 +87,7 @@
     const Volume2 = createLucideReactComponent('volume-2');
     const Waves = createLucideReactComponent('waves');
     const Repeat = createLucideReactComponent('repeat');
-    const Aperture = createLucideReactComponent('aperture');
+    // const Aperture = createLucideReactComponent('aperture'); // Не використовується
     const Minus = createLucideReactComponent('minus');
     const Split = createLucideReactComponent('split');
     const Zap = createLucideReactComponent('zap');
@@ -206,6 +206,7 @@
         // Параметри EQ/Filters
         const [isEqEnabled, setIsEqEnabled] = useState(true);
         const [bassGain, setBassGain] = useState(0);
+        // FIX: Виправлення синтаксичної помилки (використання [] замість =)
         const [trebleGain, setTrebleGain] = useState(0);
 
         const [isHpfEnabled, setIsHpfEnabled] = useState(false);
@@ -1049,7 +1050,7 @@
             }
         `;
 
-        const App = () => (
+        return (
             <div className="min-h-screen bg-gray-900 text-gray-100 p-2 sm:p-4 md:p-8 font-inter">
                 <style>{sliderStyles}</style>
                 <div className="max-w-5xl mx-auto">
@@ -1489,10 +1490,11 @@
             </div>
         );
 
-        // Рендеринг React-компонента
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    }; // <--- Закриття основної функції App
 
-    }
+    // Рендеринг React-компонента
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 </script>
 </body>
 </html>
